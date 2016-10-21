@@ -1,3 +1,6 @@
 [submodule "esp8266_easygpio"]
-	path = esp8266_easygpio
+	path = lib/esp8266_easygpio
 	url = https://www.github.com/eadf/esp8266_easygpio.git
+[submodule "lib/esphttpclient"]
+	path = lib/esphttpclient
+	url = https://github.com/Caerbannog/esphttpclient.git
