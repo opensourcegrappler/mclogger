@@ -31,8 +31,8 @@ ESPPORT		= /dev/ttyUSB0
 TARGET		= app
 
 # which modules (subdirectories) of the project to include in compiling
-MODULES		= user esp8266_easygpio driver
-EXTRA_INCDIR    = include
+MODULES		= user driver lib/esp8266_easygpio lib/esphttpclient
+EXTRA_INCDIR    = include lib/esp8266_easygpio/include
 
 # libraries used in this project, mainly provided by the SDK
 LIBS		= c gcc hal pp phy net80211 lwip wpa main ssl
