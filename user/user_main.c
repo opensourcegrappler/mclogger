@@ -184,16 +184,16 @@ void ICACHE_FLASH_ATTR uart_rx_task(os_event_t *events) {
 
 
 // interrupt handler
-// this function will be executed on any edge of GPIO4
+// this function will be executed on any positive edge of GPIO4
 LOCAL void  gpio_intr_handler(int * pps_count)
 {
-    
+  //disable interupt after the sync flashes are finished
     if ((*pps_count>=4))
     {
         ETS_GPIO_INTR_DISABLE();
     }
 
-    
+    //flash gpio 5 for sync flashes
     if((*pps_count > 0) && (*pps_count < 4))
     {
         state = !state;
@@ -241,36 +241,43 @@ void ICACHE_FLASH_ATTR
 user_init()
 {
 
-    // Initialize UART0
+    // Initialize UARTs, Uart0 logging, Uart1 GPS configure
     uart_init(BIT_RATE_115200, BIT_RATE_9600);
+    //point printf to uart1 in prep for gps configure
     UART_SetPrintPort(1);
-    
+
+    //setup network info
     char ssid[32] = SSID;
     char password[64] = SSID_PASSWORD;
     struct station_config stationConf;
 
-    //Set station mode
-    wifi_set_opmode( 0x1 );
+    //Set mode station
+    wifi_set_opmode(0x1);
 
-    //Set ap settings
+    //Set station settings and connect
     os_memcpy(&stationConf.ssid, ssid, 32);
     os_memcpy(&stationConf.password, password, 64);
     wifi_station_set_config(&stationConf);
 
+    //init gpio
     gpio_init();
 
-    
-    GPIO_OUTPUT_SET(4,0);
+    //setup pins as required
+    GPIO_OUTPUT_SET(4,0); // is this required? setting as output only to then set as input
+    //Sync led
     GPIO_OUTPUT_SET(5,0);
+    //PPS from GPS input
     easygpio_pinMode(4, EASYGPIO_NOPULL, EASYGPIO_INPUT);
-
+    //start/stop recording button
+    easygpio_pinMode(15, EASYGPIO_NOPULL, EASYGPIO_INPUT);
+    
+    //set up interrupt on PPS signal, point to gpio_intr_handler function
     ETS_GPIO_INTR_DISABLE();
     ETS_GPIO_INTR_ATTACH(gpio_intr_handler, &intr_arg);
-
     gpio_pin_intr_state_set(GPIO_ID_PIN(4), GPIO_PIN_INTR_POSEDGE);
-    
     ETS_GPIO_INTR_ENABLE();
 
+    //setup and post the config_gps function
     system_os_task(config_gps, config_gpsPrio, config_gpsQueue, config_gpsQueueLen);
     system_os_post(config_gpsPrio,0,0);
  
